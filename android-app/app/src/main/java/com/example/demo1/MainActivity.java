@@ -11,6 +11,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -20,6 +21,10 @@ public class MainActivity extends AppCompatActivity {
     private final WeatherApi weatherApi = new WeatherApi();
     private TextView temperatureView;
     private ImageView weatherIcon;
+
+    private final TextView[] dayNameViews = new TextView[5];
+    private final ImageView[] dayIconViews = new ImageView[5];
+    private final TextView[] dayTempViews = new TextView[5];
 
     private final ActivityResultLauncher<String[]> locationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -41,6 +46,25 @@ public class MainActivity extends AppCompatActivity {
 
         temperatureView = findViewById(R.id.tvTemperature);
         weatherIcon = findViewById(R.id.ivWeatherIcon);
+
+        dayNameViews[0] = findViewById(R.id.tvDay1Name);
+        dayNameViews[1] = findViewById(R.id.tvDay2Name);
+        dayNameViews[2] = findViewById(R.id.tvDay3Name);
+        dayNameViews[3] = findViewById(R.id.tvDay4Name);
+        dayNameViews[4] = findViewById(R.id.tvDay5Name);
+
+        dayIconViews[0] = findViewById(R.id.ivDay1Icon);
+        dayIconViews[1] = findViewById(R.id.ivDay2Icon);
+        dayIconViews[2] = findViewById(R.id.ivDay3Icon);
+        dayIconViews[3] = findViewById(R.id.ivDay4Icon);
+        dayIconViews[4] = findViewById(R.id.ivDay5Icon);
+
+        dayTempViews[0] = findViewById(R.id.tvDay1Temp);
+        dayTempViews[1] = findViewById(R.id.tvDay2Temp);
+        dayTempViews[2] = findViewById(R.id.tvDay3Temp);
+        dayTempViews[3] = findViewById(R.id.tvDay4Temp);
+        dayTempViews[4] = findViewById(R.id.tvDay5Temp);
+
         locationManager = new LocationManager(this);
 
         requestLocationAndFetchWeather();
@@ -57,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         temperatureView.setText("Hämtar plats…");
         weatherIcon.setImageResource(R.drawable.placeholder);
         weatherIcon.setContentDescription("Väder hämtas");
+
         locationManager.getWeatherApiUrl(new LocationManager.WeatherUrlCallback() {
             @Override
             public void onUrlReady(String url) {
@@ -71,6 +96,25 @@ public class MainActivity extends AppCompatActivity {
                         weatherIcon.setImageResource(weatherDrawableFor(forecast.symbolCode));
                         weatherIcon.setContentDescription(forecast.symbolCode.isEmpty()
                                 ? "Vädersymbol saknas" : forecast.symbolCode.replace('_', ' '));
+
+                        // Uppdatera 5-dagars prognosen
+                        if (forecast.dailyForecasts != null) {
+                            List<DailyForecast> dailyList = forecast.dailyForecasts;
+                            for (int i = 0; i < 5; i++) {
+                                if (i < dailyList.size()) {
+                                    DailyForecast daily = dailyList.get(i);
+                                    dayNameViews[i].setText(daily.getDayName());
+                                    dayTempViews[i].setText(String.format(
+                                            Locale.getDefault(), "%.0f°", daily.getMaxTemp()));
+                                    dayIconViews[i].setImageResource(weatherDrawableFor(daily.getSymbolCode()));
+                                    dayIconViews[i].setContentDescription(daily.getDayName() + ": " + daily.getSymbolCode());
+                                } else {
+                                    dayNameViews[i].setText("");
+                                    dayTempViews[i].setText("");
+                                    dayIconViews[i].setImageResource(R.drawable.placeholder);
+                                }
+                            }
+                        }
                     }
 
                     @Override
