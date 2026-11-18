@@ -2,4 +2,11 @@
     <string name="app_name">demo1</string>
     <string name="theme_switch_to_dark">Aktivera mörkt tema</string>
     <string name="theme_switch_to_light">Aktivera ljust tema</string>
+    <string name="weather_app_title">Weather App</string>
+    <string name="weather_loading_description">Väder hämtas</string>
+    <string name="temperature_placeholder">72°C</string>
+    <string name="weather_data_attribution">Väderdata: MET Norway · CC BY 4.0</string>
+    <string name="cc_by_license_url">https://creativecommons.org/licenses/by/4.0/</string>
+    <string name="daily_forecast_title">5-dagarsprognos</string>
+    <string name="daily_forecast_unavailable">Ingen 5-dagarsprognos tillgänglig</string>
 </resources>
