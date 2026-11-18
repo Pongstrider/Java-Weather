@@ -2,6 +2,9 @@ package com.example.demo1;
 
 import android.Manifest;
 import android.os.Bundle;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.widget.Button;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.ImageView;
@@ -10,6 +13,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import java.util.Locale;
 
@@ -20,6 +24,9 @@ public class MainActivity extends AppCompatActivity {
     private final WeatherApi weatherApi = new WeatherApi();
     private TextView temperatureView;
     private ImageView weatherIcon;
+    private WeatherBackgroundView weatherBackground;
+    private String displayedSymbol;
+    private double displayedTemperature;
 
     private final ActivityResultLauncher<String[]> locationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -36,14 +43,35 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SharedPreferences preferences = getSharedPreferences("appearance", MODE_PRIVATE);
+        if (preferences.contains("dark_theme")) {
+            getDelegate().setLocalNightMode(preferences.getBoolean("dark_theme", false)
+                    ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        weatherBackground = findViewById(R.id.weatherBackground);
+        Button themeButton = findViewById(R.id.themeButton);
+        boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES;
+        themeButton.setText(dark ? R.string.theme_switch_to_light : R.string.theme_switch_to_dark);
+        themeButton.setOnClickListener(view -> {
+            preferences.edit().putBoolean("dark_theme", !dark).apply();
+            getDelegate().setLocalNightMode(dark
+                    ? AppCompatDelegate.MODE_NIGHT_NO : AppCompatDelegate.MODE_NIGHT_YES);
+        });
 
         temperatureView = findViewById(R.id.tvTemperature);
         weatherIcon = findViewById(R.id.ivWeatherIcon);
         locationManager = new LocationManager(this);
 
-        requestLocationAndFetchWeather();
+        if (savedInstanceState != null && savedInstanceState.containsKey("weather_symbol")) {
+            showWeather(savedInstanceState.getDouble("weather_temperature"),
+                    savedInstanceState.getString("weather_symbol", ""));
+        } else {
+            requestLocationAndFetchWeather();
+        }
     }
 
     private void requestLocationAndFetchWeather() {
@@ -66,11 +94,7 @@ public class MainActivity extends AppCompatActivity {
                 weatherApi.fetchWeather(url, new WeatherApi.Callback() {
                     @Override
                     public void onSuccess(WeatherApi.Forecast forecast) {
-                        temperatureView.setText(String.format(
-                                Locale.getDefault(), "%.1f °C", forecast.temperature));
-                        weatherIcon.setImageResource(weatherDrawableFor(forecast.symbolCode));
-                        weatherIcon.setContentDescription(forecast.symbolCode.isEmpty()
-                                ? "Vädersymbol saknas" : forecast.symbolCode.replace('_', ' '));
+                        showWeather(forecast.temperature, forecast.symbolCode);
                     }
 
                     @Override
@@ -90,6 +114,25 @@ public class MainActivity extends AppCompatActivity {
                 temperatureView.setText("Kunde inte hämta plats");
             }
         });
+    }
+
+    private void showWeather(double temperature, String symbolCode) {
+        displayedTemperature = temperature;
+        displayedSymbol = symbolCode;
+        temperatureView.setText(String.format(Locale.getDefault(), "%.1f °C", temperature));
+        weatherIcon.setImageResource(weatherDrawableFor(symbolCode));
+        weatherIcon.setContentDescription(symbolCode.isEmpty()
+                ? "Vädersymbol saknas" : symbolCode.replace('_', ' '));
+        weatherBackground.setWeather(symbolCode);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (displayedSymbol != null) {
+            outState.putString("weather_symbol", displayedSymbol);
+            outState.putDouble("weather_temperature", displayedTemperature);
+        }
     }
 
     /** MET:s symbolkoder matchar filnamnen i drawable, även för dag och natt. */

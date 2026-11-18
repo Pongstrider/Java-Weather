@@ -1,66 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/sky_gradient"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:layout_height="match_parent">
 
-    <!-- App Header -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="Weather App"
-        android:textColor="@color/white"
-        android:textSize="48sp"
-        android:textStyle="bold" />
-
-    <View
+    <com.example.demo1.WeatherBackgroundView
+        android:id="@+id/weatherBackground"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
 
-    <!-- Weather Icon Space -->
-    <ImageView
-        android:id="@+id/ivWeatherIcon"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
-        android:contentDescription="Väder hämtas"
-        android:src="@drawable/placeholder" />
-
-    <!-- Temperature Text -->
-    <TextView
-        android:id="@+id/tvTemperature"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="72°C"
-        android:textColor="@color/white"
-        android:textSize="48sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Väderdata: MET Norway · CC BY 4.0"
-        android:textColor="@color/white"
-        android:autoLink="web" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="https://creativecommons.org/licenses/by/4.0/"
-        android:textColor="@color/white"
-        android:textColorLink="@color/white"
-        android:autoLink="web" />
-
-    <View
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-</LinearLayout>
+        <!-- App Header -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="Weather App"
+            android:textColor="@color/white"
+            android:textSize="48sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/themeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/theme_switch_to_dark" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Weather Icon Space -->
+        <ImageView
+            android:id="@+id/ivWeatherIcon"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:contentDescription="Väder hämtas"
+            android:src="@drawable/placeholder" />
+
+        <!-- Temperature Text -->
+        <TextView
+            android:id="@+id/tvTemperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="72°C"
+            android:textColor="@color/white"
+            android:textSize="48sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Väderdata: MET Norway · CC BY 4.0"
+            android:textColor="@color/white"
+            android:autoLink="web" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="https://creativecommons.org/licenses/by/4.0/"
+            android:textColor="@color/white"
+            android:textColorLink="@color/white"
+            android:autoLink="web" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+</FrameLayout>
