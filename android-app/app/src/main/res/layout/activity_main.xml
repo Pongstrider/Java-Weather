@@ -4,7 +4,7 @@
     android:layout_height="match_parent">
 
     <com.example.demo1.WeatherBackgroundView
-        android:id="@+id/weatherBackground"
+        android:id="@+id/weather_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:importantForAccessibility="no" />
@@ -28,7 +28,7 @@
             android:textStyle="bold" />
 
         <Button
-            android:id="@+id/themeButton"
+            android:id="@+id/theme_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
