@@ -55,7 +55,9 @@ public class MainActivity extends AppCompatActivity {
         Button themeButton = findViewById(R.id.theme_button);
         boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
                 == Configuration.UI_MODE_NIGHT_YES;
-        themeButton.setText(dark ? R.string.theme_switch_to_light : R.string.theme_switch_to_dark);
+        themeButton.setText(dark ? "☀" : "☾");
+        themeButton.setContentDescription(getString(
+                dark ? R.string.theme_switch_to_light : R.string.theme_switch_to_dark));
         themeButton.setOnClickListener(view -> {
             preferences.edit().putBoolean("dark_theme", !dark).apply();
             getDelegate().setLocalNightMode(dark

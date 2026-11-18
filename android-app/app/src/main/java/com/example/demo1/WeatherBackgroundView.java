@@ -55,13 +55,13 @@ public final class WeatherBackgroundView extends View {
         }
         boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
                 == Configuration.UI_MODE_NIGHT_YES;
-        int top = dark ? 0xff0b1326 : 0xff1557a0;
-        int bottom = dark ? 0xff1e304c : 0xff3477ae;
+        int top = dark ? 0xff123447 : 0xff123044;
+        int bottom = dark ? 0xff2b6075 : 0xff2d6176;
         if (rain || snow) {
             top = dark ? 0xff111723 : 0xff354b65;
             bottom = dark ? 0xff28364a : 0xff536b85;
         }
-        sky.setShader(new LinearGradient(0, 0, 0, getHeight(), top, bottom, Shader.TileMode.CLAMP));
+        sky.setShader(new LinearGradient(0, 0, getWidth(), getHeight(), top, bottom, Shader.TileMode.CLAMP));
     }
 
     @Override
