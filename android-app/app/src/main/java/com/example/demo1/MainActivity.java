@@ -1,6 +1,7 @@
 package com.example.demo1;
 
 import android.Manifest;
+import android.content.Intent;
 import android.os.Bundle;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -32,6 +33,28 @@ public class MainActivity extends AppCompatActivity {
     private ImageView weatherIcon;
     private WeatherBackgroundView weatherBackground;
     private WeatherApi.Forecast displayedForecast;
+    private TextView placeName;
+    private String selectedUrl;
+    private String selectedName;
+    private int requestVersion;
+
+    private final ActivityResultLauncher<Intent> mapPicker =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                Intent data = result.getData();
+                if (result.getResultCode() != RESULT_OK || data == null) {
+                    return;
+                }
+                double latitude = data.getDoubleExtra(MapPickerActivity.LATITUDE, Double.NaN);
+                double longitude = data.getDoubleExtra(MapPickerActivity.LONGITUDE, Double.NaN);
+                if (!Double.isFinite(latitude) || !Double.isFinite(longitude)
+                        || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+                    return;
+                }
+                selectedUrl = LocationManager.buildWeatherApiUrl(latitude, longitude);
+                selectedName = data.getStringExtra(MapPickerActivity.PLACE_NAME);
+                placeName.setText(selectedName);
+                fetchForecast(selectedUrl);
+            });
 
     private final ActivityResultLauncher<String[]> locationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -72,11 +95,23 @@ public class MainActivity extends AppCompatActivity {
         temperatureView = findViewById(R.id.tvTemperature);
         weatherIcon = findViewById(R.id.ivWeatherIcon);
         locationManager = new LocationManager(this);
+        placeName = findViewById(R.id.weather_place_name);
+        findViewById(R.id.open_map).setOnClickListener(view -> openMap(false));
+        findViewById(R.id.open_city_search).setOnClickListener(view -> openMap(true));
+        if (savedInstanceState != null) {
+            selectedUrl = savedInstanceState.getString("selected_url");
+            selectedName = savedInstanceState.getString("selected_name");
+        }
+        if (selectedName != null) {
+            placeName.setText(selectedName);
+        }
 
         Object restored = savedInstanceState == null ? null
                 : savedInstanceState.getSerializable("forecast");
         if (restored instanceof WeatherApi.Forecast) {
             showWeather((WeatherApi.Forecast) restored);
+        } else if (selectedUrl != null) {
+            fetchForecast(selectedUrl);
         } else {
             requestLocationAndFetchWeather();
         }
@@ -89,37 +124,65 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void openMap(boolean focusSearch) {
+        Intent intent = new Intent(this, MapPickerActivity.class);
+        intent.putExtra(MapPickerActivity.FOCUS_SEARCH, focusSearch);
+        mapPicker.launch(intent);
+    }
+
     private void fetchWeatherForCurrentLocation() {
+        if (selectedUrl != null) {
+            return;
+        }
+        int request = ++requestVersion;
         temperatureView.setText("Hämtar plats…");
-        weatherIcon.setImageResource(R.drawable.placeholder);
-        weatherIcon.setContentDescription("Väder hämtas");
         locationManager.getWeatherApiUrl(new LocationManager.WeatherUrlCallback() {
             @Override
             public void onUrlReady(String url) {
-                Log.d(TAG, "Anropar MET API med URL: " + url);
-                temperatureView.setText("Hämtar väder…");
-
-                weatherApi.fetchWeather(url, new WeatherApi.Callback() {
-                    @Override
-                    public void onSuccess(WeatherApi.Forecast forecast) {
-                        showWeather(forecast);
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        temperatureView.setText("Kunde inte hämta väder");
-                        weatherIcon.setImageResource(R.drawable.placeholder);
-                        weatherIcon.setContentDescription("Väder saknas");
-                        Log.e(TAG, "Kunde inte hämta prognosen", error);
-                    }
-                });
+                if (request == requestVersion && !isDestroyed()) {
+                    fetchForecast(url);
+                }
             }
 
             @Override
             public void onError(String error) {
-                Log.e(TAG, "Kunde inte hämta plats/URL: " + error);
-                Toast.makeText(MainActivity.this, error, Toast.LENGTH_SHORT).show();
-                temperatureView.setText("Kunde inte hämta plats");
+                if (request == requestVersion && !isDestroyed()) {
+                    Log.e(TAG, "Kunde inte hämta plats: " + error);
+                    temperatureView.setText("Kunde inte hämta plats");
+                }
+            }
+        });
+    }
+
+    private void fetchForecast(String url) {
+        int request = ++requestVersion;
+        displayedForecast = null;
+        temperatureView.setText("Hämtar väder…");
+        weatherIcon.setImageResource(R.drawable.placeholder);
+        weatherIcon.setContentDescription("Väder hämtas");
+        weatherBackground.setWeather("");
+        ((TextView) findViewById(R.id.apparent_temperature)).setText("—");
+        ((TextView) findViewById(R.id.wind_speed)).setText("—");
+        ((LinearLayout) findViewById(R.id.daily_forecast_row)).removeAllViews();
+        ((LinearLayout) findViewById(R.id.hourly_forecast_row)).removeAllViews();
+        findViewById(R.id.daily_forecast_empty).setVisibility(View.VISIBLE);
+        findViewById(R.id.hourly_forecast_empty).setVisibility(View.VISIBLE);
+
+        weatherApi.fetchWeather(url, new WeatherApi.Callback() {
+            @Override
+            public void onSuccess(WeatherApi.Forecast forecast) {
+                if (request == requestVersion) {
+                    showWeather(forecast);
+                }
+            }
+
+            @Override
+            public void onError(Exception error) {
+                if (request == requestVersion) {
+                    temperatureView.setText("Kunde inte hämta väder");
+                    weatherIcon.setContentDescription("Väder saknas");
+                    Log.e(TAG, "Kunde inte hämta prognosen", error);
+                }
             }
         });
     }
@@ -188,6 +251,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putString("selected_url", selectedUrl);
+        outState.putString("selected_name", selectedName);
         if (displayedForecast != null) {
             outState.putSerializable("forecast", displayedForecast);
         }
