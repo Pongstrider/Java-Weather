@@ -8,7 +8,6 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
 
 import java.util.Locale;
 
@@ -75,10 +74,7 @@ public class LocationManager {
             return;
         }
 
-        fusedLocationClient.getCurrentLocation(
-                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-                null
-        ).addOnSuccessListener(location -> {
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
             if (location != null) {
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();

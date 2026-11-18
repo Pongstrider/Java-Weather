@@ -17,6 +17,9 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private static final String SUNDSVALL_URL =
+            "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=62.39&lon=17.31";
+
     private LocationManager locationManager;
     private final WeatherApi weatherApi = new WeatherApi();
     private final daysapi daysApi = new daysapi();
@@ -36,8 +39,9 @@ public class MainActivity extends AppCompatActivity {
                 if (Boolean.TRUE.equals(fineGranted) || Boolean.TRUE.equals(coarseGranted)) {
                     fetchWeatherForCurrentLocation();
                 } else {
-                    Toast.makeText(this, "Platsbehörighet krävs för att hämta väder baserat på din position", Toast.LENGTH_SHORT).show();
-                    temperatureView.setText("Platsbehörighet saknas");
+                    Toast.makeText(this, "Använder Sundsvall (ingen platsbehörighet)", Toast.LENGTH_SHORT).show();
+                    // Fallback to Sundsvall for testing
+                    fetchWeatherForUrl(SUNDSVALL_URL);
                 }
             });
 
@@ -86,60 +90,64 @@ public class MainActivity extends AppCompatActivity {
         locationManager.getWeatherApiUrl(new LocationManager.WeatherUrlCallback() {
             @Override
             public void onUrlReady(String url) {
-                Log.d(TAG, "Anropar MET API med URL: " + url);
-                temperatureView.setText("Hämtar väder…");
-
-                // Fetch current / hourly weather
-                weatherApi.fetchWeather(url, new WeatherApi.Callback() {
-                    @Override
-                    public void onSuccess(WeatherApi.Forecast forecast) {
-                        temperatureView.setText(String.format(
-                                Locale.getDefault(), "%.1f °C", forecast.temperature));
-                        weatherIcon.setImageResource(weatherDrawableFor(forecast.symbolCode));
-                        weatherIcon.setContentDescription(forecast.symbolCode.isEmpty()
-                                ? "Vädersymbol saknas" : forecast.symbolCode.replace('_', ' '));
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        temperatureView.setText("Kunde inte hämta väder");
-                        weatherIcon.setImageResource(R.drawable.placeholder);
-                        weatherIcon.setContentDescription("Väder saknas");
-                        Log.e(TAG, "Kunde inte hämta prognosen", error);
-                    }
-                });
-
-                // Fetch multi-day forecast (daysapi)
-                daysApi.fetchDaysForecast(url, new daysapi.Callback() {
-                    @Override
-                    public void onSuccess(List<daysapi.DayForecast> forecasts) {
-                        for (int i = 0; i < 5; i++) {
-                            if (i < forecasts.size()) {
-                                daysapi.DayForecast df = forecasts.get(i);
-                                dayNameViews[i].setText(df.dayName);
-                                dayTempViews[i].setText(String.format(Locale.getDefault(), "%.1f °C", df.temperature));
-                                dayIconViews[i].setImageResource(weatherDrawableFor(df.symbolCode));
-                                dayIconViews[i].setContentDescription(df.symbolCode.isEmpty() ? "Vädersymbol" : df.symbolCode.replace('_', ' '));
-                            } else {
-                                dayNameViews[i].setText("");
-                                dayTempViews[i].setText("");
-                                dayIconViews[i].setImageResource(R.drawable.placeholder);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        Log.e(TAG, "Kunde inte hämta veckoprognos", error);
-                    }
-                });
+                fetchWeatherForUrl(url);
             }
 
             @Override
             public void onError(String error) {
-                Log.e(TAG, "Kunde inte hämta plats/URL: " + error);
-                Toast.makeText(MainActivity.this, error, Toast.LENGTH_SHORT).show();
-                temperatureView.setText("Kunde inte hämta plats");
+                Log.e(TAG, "Kunde inte hämta plats/URL: " + error + " - Använder Sundsvall som test");
+                Toast.makeText(MainActivity.this, "Använder Sundsvall (testläge)", Toast.LENGTH_SHORT).show();
+                fetchWeatherForUrl(SUNDSVALL_URL);
+            }
+        });
+    }
+
+    private void fetchWeatherForUrl(String url) {
+        Log.d(TAG, "Anropar MET API med URL: " + url);
+        temperatureView.setText("Hämtar väder…");
+
+        // Fetch current / hourly weather
+        weatherApi.fetchWeather(url, new WeatherApi.Callback() {
+            @Override
+            public void onSuccess(WeatherApi.Forecast forecast) {
+                temperatureView.setText(String.format(
+                        Locale.getDefault(), "%.1f °C", forecast.temperature));
+                weatherIcon.setImageResource(weatherDrawableFor(forecast.symbolCode));
+                weatherIcon.setContentDescription(forecast.symbolCode.isEmpty()
+                        ? "Vädersymbol saknas" : forecast.symbolCode.replace('_', ' '));
+            }
+
+            @Override
+            public void onError(Exception error) {
+                temperatureView.setText("Kunde inte hämta väder");
+                weatherIcon.setImageResource(R.drawable.placeholder);
+                weatherIcon.setContentDescription("Väder saknas");
+                Log.e(TAG, "Kunde inte hämta prognosen", error);
+            }
+        });
+
+        // Fetch multi-day forecast (daysapi)
+        daysApi.fetchDaysForecast(url, new daysapi.Callback() {
+            @Override
+            public void onSuccess(List<daysapi.DayForecast> forecasts) {
+                for (int i = 0; i < 5; i++) {
+                    if (i < forecasts.size()) {
+                        daysapi.DayForecast df = forecasts.get(i);
+                        dayNameViews[i].setText(df.dayName);
+                        dayTempViews[i].setText(String.format(Locale.getDefault(), "%.1f °C", df.temperature));
+                        dayIconViews[i].setImageResource(weatherDrawableFor(df.symbolCode));
+                        dayIconViews[i].setContentDescription(df.symbolCode.isEmpty() ? "Vädersymbol" : df.symbolCode.replace('_', ' '));
+                    } else {
+                        dayNameViews[i].setText("");
+                        dayTempViews[i].setText("");
+                        dayIconViews[i].setImageResource(R.drawable.placeholder);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(Exception error) {
+                Log.e(TAG, "Kunde inte hämta veckoprognos", error);
             }
         });
     }
@@ -219,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
             case "rainshowers_night": return R.drawable.rainshowers_night;
             case "rainshowers_polartwilight": return R.drawable.rainshowers_polartwilight;
             case "rainshowersandthunder_day": return R.drawable.rainshowersandthunder_day;
-            case "rainshowersandthunder_night": return R.drawable.rainshowersandthunder_night;
+            case "rainshowersandthunder_night": return R.drawable.rainshowers_night;
             case "rainshowersandthunder_polartwilight": return R.drawable.rainshowersandthunder_polartwilight;
             case "sleetshowers_day": return R.drawable.sleetshowers_day;
             case "sleetshowers_night": return R.drawable.sleetshowers_night;
