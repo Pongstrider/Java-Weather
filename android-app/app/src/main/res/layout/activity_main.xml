@@ -37,17 +37,198 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="72°C"
+        android:text="--°C"
         android:textColor="@color/white"
         android:textSize="48sp"
         android:textStyle="bold" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- 5-Day Forecast (Monday-Friday / Next 5 Days) at the bottom -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp">
+
+        <!-- Day 1 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+            <TextView
+                android:id="@+id/tvDay1Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mån"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+            <ImageView
+                android:id="@+id/ivDay1Icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="2dp"
+                android:contentDescription="Vädersymbol"
+                android:src="@drawable/placeholder" />
+            <TextView
+                android:id="@+id/tvDay1Temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="--°C"
+                android:textColor="@color/white"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Day 2 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+            <TextView
+                android:id="@+id/tvDay2Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tis"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+            <ImageView
+                android:id="@+id/ivDay2Icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="2dp"
+                android:contentDescription="Vädersymbol"
+                android:src="@drawable/placeholder" />
+            <TextView
+                android:id="@+id/tvDay2Temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="--°C"
+                android:textColor="@color/white"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Day 3 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+            <TextView
+                android:id="@+id/tvDay3Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ons"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+            <ImageView
+                android:id="@+id/ivDay3Icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="2dp"
+                android:contentDescription="Vädersymbol"
+                android:src="@drawable/placeholder" />
+            <TextView
+                android:id="@+id/tvDay3Temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="--°C"
+                android:textColor="@color/white"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Day 4 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+            <TextView
+                android:id="@+id/tvDay4Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tor"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+            <ImageView
+                android:id="@+id/ivDay4Icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="2dp"
+                android:contentDescription="Vädersymbol"
+                android:src="@drawable/placeholder" />
+            <TextView
+                android:id="@+id/tvDay4Temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="--°C"
+                android:textColor="@color/white"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Day 5 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+            <TextView
+                android:id="@+id/tvDay5Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fre"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+            <ImageView
+                android:id="@+id/ivDay5Icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="2dp"
+                android:contentDescription="Vädersymbol"
+                android:src="@drawable/placeholder" />
+            <TextView
+                android:id="@+id/tvDay5Temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="--°C"
+                android:textColor="@color/white"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Attribution -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:text="Väderdata: MET Norway · CC BY 4.0"
         android:textColor="@color/white"
+        android:textSize="12sp"
         android:autoLink="web" />
 
     <TextView
@@ -56,11 +237,7 @@
         android:text="https://creativecommons.org/licenses/by/4.0/"
         android:textColor="@color/white"
         android:textColorLink="@color/white"
+        android:textSize="12sp"
         android:autoLink="web" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
 
 </LinearLayout>
