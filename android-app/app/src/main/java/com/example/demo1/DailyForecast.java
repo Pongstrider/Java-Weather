@@ -8,7 +8,7 @@ public class DailyForecast {
     private final double maxTemp;
     private final double minTemp;
     private final String symbolCode;
-
+    private final int VERSION = 1;
     public DailyForecast(String dayName, double maxTemp, double minTemp, String symbolCode) {
         this.dayName = dayName;
         this.maxTemp = maxTemp;
