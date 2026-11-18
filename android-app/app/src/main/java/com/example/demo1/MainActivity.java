@@ -51,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        weatherBackground = findViewById(R.id.weatherBackground);
-        Button themeButton = findViewById(R.id.themeButton);
+        weatherBackground = findViewById(R.id.weather_background);
+        Button themeButton = findViewById(R.id.theme_button);
         boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
                 == Configuration.UI_MODE_NIGHT_YES;
         themeButton.setText(dark ? R.string.theme_switch_to_light : R.string.theme_switch_to_dark);
