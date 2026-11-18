@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.widget.Button;
+import android.view.View;
+import android.widget.LinearLayout;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.ImageView;
@@ -15,7 +17,11 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,8 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView temperatureView;
     private ImageView weatherIcon;
     private WeatherBackgroundView weatherBackground;
-    private String displayedSymbol;
-    private double displayedTemperature;
+    private WeatherApi.Forecast displayedForecast;
 
     private final ActivityResultLauncher<String[]> locationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -68,9 +73,10 @@ public class MainActivity extends AppCompatActivity {
         weatherIcon = findViewById(R.id.ivWeatherIcon);
         locationManager = new LocationManager(this);
 
-        if (savedInstanceState != null && savedInstanceState.containsKey("weather_symbol")) {
-            showWeather(savedInstanceState.getDouble("weather_temperature"),
-                    savedInstanceState.getString("weather_symbol", ""));
+        Object restored = savedInstanceState == null ? null
+                : savedInstanceState.getSerializable("forecast");
+        if (restored instanceof WeatherApi.Forecast) {
+            showWeather((WeatherApi.Forecast) restored);
         } else {
             requestLocationAndFetchWeather();
         }
@@ -96,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
                 weatherApi.fetchWeather(url, new WeatherApi.Callback() {
                     @Override
                     public void onSuccess(WeatherApi.Forecast forecast) {
-                        showWeather(forecast.temperature, forecast.symbolCode);
+                        showWeather(forecast);
                     }
 
                     @Override
@@ -118,22 +124,72 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void showWeather(double temperature, String symbolCode) {
-        displayedTemperature = temperature;
-        displayedSymbol = symbolCode;
-        temperatureView.setText(String.format(Locale.getDefault(), "%.1f °C", temperature));
+    private void showWeather(WeatherApi.Forecast forecast) {
+        displayedForecast = forecast;
+        String symbolCode = forecast.symbolCode;
+        temperatureView.setText(formatValue(forecast.temperature, "%.1f °C"));
         weatherIcon.setImageResource(weatherDrawableFor(symbolCode));
         weatherIcon.setContentDescription(symbolCode.isEmpty()
                 ? "Vädersymbol saknas" : symbolCode.replace('_', ' '));
         weatherBackground.setWeather(symbolCode);
+
+        ((TextView) findViewById(R.id.apparent_temperature))
+                .setText(formatValue(forecast.apparentTemperature, "%.1f °C"));
+        ((TextView) findViewById(R.id.wind_speed))
+                .setText(formatValue(forecast.windSpeed, "%.1f m/s"));
+
+        LinearLayout dailyRow = findViewById(R.id.daily_forecast_row);
+        dailyRow.removeAllViews();
+        for (DailyForecast day : forecast.days) {
+            String temperatures = formatValue(day.getMaxTemp(), "%.0f°")
+                    + " / " + formatValue(day.getMinTemp(), "%.0f°");
+            addForecastCell(dailyRow, day.getDayName(), temperatures, day.getSymbolCode(), true);
+        }
+        LinearLayout hourlyRow = findViewById(R.id.hourly_forecast_row);
+        hourlyRow.removeAllViews();
+        for (WeatherApi.Hour hour : forecast.hours) {
+            addForecastCell(hourlyRow, formatHour(hour.time),
+                    formatValue(hour.temperature, "%.0f °C"), hour.symbolCode, false);
+        }
+        findViewById(R.id.daily_forecast_empty)
+                .setVisibility(forecast.days.isEmpty() ? View.VISIBLE : View.GONE);
+        findViewById(R.id.hourly_forecast_empty)
+                .setVisibility(forecast.hours.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    private void addForecastCell(LinearLayout row, String label, String temperature,
+                                 String symbol, boolean daily) {
+        View cell = getLayoutInflater().inflate(R.layout.forecast_cell, row, false);
+        if (daily) {
+            cell.setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        }
+        ((TextView) cell.findViewById(R.id.forecast_label)).setText(label);
+        ((TextView) cell.findViewById(R.id.forecast_temperature)).setText(temperature);
+        ((ImageView) cell.findViewById(R.id.forecast_icon)).setImageResource(weatherDrawableFor(symbol));
+        row.addView(cell);
+    }
+
+    private static String formatValue(double value, String format) {
+        return Double.isFinite(value) ? String.format(Locale.getDefault(), format, value) : "—";
+    }
+
+    private String formatHour(String time) {
+        SimpleDateFormat utc = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ROOT);
+        utc.setTimeZone(TimeZone.getTimeZone("UTC"));
+        try {
+            Date date = utc.parse(time);
+            return date == null ? "—" : android.text.format.DateFormat.getTimeFormat(this).format(date);
+        } catch (ParseException e) {
+            return "—";
+        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (displayedSymbol != null) {
-            outState.putString("weather_symbol", displayedSymbol);
-            outState.putDouble("weather_temperature", displayedTemperature);
+        if (displayedForecast != null) {
+            outState.putSerializable("forecast", displayedForecast);
         }
     }
 
