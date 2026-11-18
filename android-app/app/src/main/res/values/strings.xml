@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">demo1</string>
+    <string name="theme_switch_to_dark">Aktivera mörkt tema</string>
+    <string name="theme_switch_to_light">Aktivera ljust tema</string>
 </resources>
