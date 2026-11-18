@@ -1,0 +1,6 @@
+<resources>
+    <color name="weather_page">#EAF2F5</color>
+    <color name="weather_card">#D9E8EE</color>
+    <color name="weather_search">#EAE4EF</color>
+    <color name="weather_ink">#132F3D</color>
+</resources>
