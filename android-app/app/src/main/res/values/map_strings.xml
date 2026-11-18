@@ -1,0 +1,10 @@
+<resources>
+    <string name="map_search_hint">Sök stad</string>
+    <string name="map_search">Sök</string>
+    <string name="map_pick_hint">Tryck på kartan eller sök efter en stad</string>
+    <string name="map_confirm">Visa vädret här</string>
+    <string name="map_attribution">© OpenStreetMap-bidragsgivare, SRTM · OpenTopoMap (CC BY-SA) · Rapportera kartfel</string>
+    <string name="map_selected_place">Vald plats</string>
+    <string name="map_no_result">Ingen plats hittades</string>
+    <string name="map_search_error">Sökningen misslyckades. Du kan välja en plats på kartan.</string>
+</resources>
