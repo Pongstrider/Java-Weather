@@ -37,8 +37,9 @@ public final class WeatherBackgroundView extends View {
     }
 
     public void setWeather(String symbolCode) {
-        rain = symbolCode.contains("rain") || symbolCode.contains("sleet");
-        snow = symbolCode.contains("snow") || symbolCode.contains("sleet");
+        String code = symbolCode == null ? "" : symbolCode;
+        rain = code.contains("rain") || code.contains("sleet");
+        snow = code.contains("snow") || code.contains("sleet");
         previousFrame = 0;
         updateSky();
         invalidate();

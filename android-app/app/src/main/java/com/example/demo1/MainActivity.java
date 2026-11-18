@@ -6,20 +6,31 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.ImageView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.Button;
+import android.content.res.Configuration;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private static final String PREFS_NAME = "weather_settings";
+    private static final String PREF_NIGHT_MODE = "night_mode";
     private LocationManager locationManager;
     private final WeatherApi weatherApi = new WeatherApi();
     private TextView temperatureView;
+    private LinearLayout dailyForecastContainer;
     private ImageView weatherIcon;
+    private WeatherBackgroundView weatherBackground;
+    private Button themeButton;
 
     private final ActivityResultLauncher<String[]> locationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -36,11 +47,21 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        int savedNightMode = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .getInt(PREF_NIGHT_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        if (savedNightMode != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
+            AppCompatDelegate.setDefaultNightMode(savedNightMode);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         temperatureView = findViewById(R.id.tvTemperature);
+        dailyForecastContainer = findViewById(R.id.dailyForecastContainer);
         weatherIcon = findViewById(R.id.ivWeatherIcon);
+        weatherBackground = findViewById(R.id.weatherBackground);
+        themeButton = findViewById(R.id.theme_button);
+        updateThemeButton();
+        themeButton.setOnClickListener(view -> toggleTheme());
         locationManager = new LocationManager(this);
 
         requestLocationAndFetchWeather();
@@ -71,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
                         weatherIcon.setImageResource(weatherDrawableFor(forecast.symbolCode));
                         weatherIcon.setContentDescription(forecast.symbolCode.isEmpty()
                                 ? "Vädersymbol saknas" : forecast.symbolCode.replace('_', ' '));
+                        showDailyForecast(forecast);
+                        weatherBackground.setWeather(forecast.symbolCode);
                     }
 
                     @Override
@@ -78,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
                         temperatureView.setText("Kunde inte hämta väder");
                         weatherIcon.setImageResource(R.drawable.placeholder);
                         weatherIcon.setContentDescription("Väder saknas");
+                        weatherBackground.setWeather("");
                         Log.e(TAG, "Kunde inte hämta prognosen", error);
                     }
                 });
@@ -90,6 +114,82 @@ public class MainActivity extends AppCompatActivity {
                 temperatureView.setText("Kunde inte hämta plats");
             }
         });
+    }
+
+    private void updateThemeButton() {
+        boolean darkTheme = (getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        themeButton.setText(darkTheme
+                ? R.string.theme_switch_to_light
+                : R.string.theme_switch_to_dark);
+    }
+
+    private void toggleTheme() {
+        boolean darkTheme = (getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        int nightMode = darkTheme
+                ? AppCompatDelegate.MODE_NIGHT_NO
+                : AppCompatDelegate.MODE_NIGHT_YES;
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                .putInt(PREF_NIGHT_MODE, nightMode)
+                .apply();
+        AppCompatDelegate.setDefaultNightMode(nightMode);
+    }
+
+    private void showDailyForecast(WeatherApi.Forecast forecast) {
+        dailyForecastContainer.removeAllViews();
+        if (forecast.dailyForecasts == null || forecast.dailyForecasts.isEmpty()) {
+            TextView emptyMessage = new TextView(this);
+            emptyMessage.setText(R.string.daily_forecast_unavailable);
+            emptyMessage.setTextColor(getColor(R.color.white));
+            dailyForecastContainer.addView(emptyMessage);
+            return;
+        }
+
+        int dayCount = Math.min(5, forecast.dailyForecasts.size());
+        for (int i = 0; i < dayCount; i++) {
+            DailyForecast day = forecast.dailyForecasts.get(i);
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setGravity(Gravity.CENTER);
+            card.setPadding(dp(6), dp(8), dp(6), dp(8));
+
+            TextView dayLabel = new TextView(this);
+            dayLabel.setText(day.getDayName());
+            dayLabel.setTextColor(getColor(R.color.white));
+            dayLabel.setTextSize(14);
+            dayLabel.setGravity(Gravity.CENTER);
+            card.addView(dayLabel, new LinearLayout.LayoutParams(dp(54),
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(weatherDrawableFor(day.getSymbolCode()));
+            icon.setContentDescription(day.getSymbolCode().replace('_', ' '));
+            icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(40), dp(40));
+            iconParams.topMargin = dp(4);
+            card.addView(icon, iconParams);
+
+            TextView temperatures = new TextView(this);
+            temperatures.setText(String.format(Locale.getDefault(), "↑ %.0f°\n↓ %.0f°",
+                    day.getMaxTemp(), day.getMinTemp()));
+            temperatures.setTextColor(getColor(R.color.white));
+            temperatures.setTextSize(14);
+            temperatures.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams temperatureParams = new LinearLayout.LayoutParams(
+                    dp(54), ViewGroup.LayoutParams.WRAP_CONTENT);
+            temperatureParams.topMargin = dp(4);
+            card.addView(temperatures, temperatureParams);
+
+            LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                    dp(58), ViewGroup.LayoutParams.WRAP_CONTENT);
+            cardParams.setMarginEnd(dp(1));
+            dailyForecastContainer.addView(card, cardParams);
+        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     /** MET:s symbolkoder matchar filnamnen i drawable, även för dag och natt. */
